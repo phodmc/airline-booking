@@ -1,6 +1,6 @@
 # app/routers/flights.py
 
-from datetime import date, datetime
+from datetime import date, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -65,7 +65,7 @@ def search_flights(
         models.Flight.ArrivalAirportID == destination_id,
         # Check if the departure date matches the date part of the DATETIMEOFFSET
         models.Flight.DepartureDateTime >= departure_date,
-        models.Flight.DepartureDateTime < departure_date + datetime.timedelta(days=1),
+        models.Flight.DepartureDateTime < departure_date + timedelta(days=1),
     )
 
     # --- 3. Filter by Inventory/Availability ---
