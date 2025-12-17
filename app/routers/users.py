@@ -22,8 +22,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # --- Security Utility Functions ---
 
 
-def get_password_hash(password):
-    """Generates a secure hash for a password."""
+def get_password_hash(password: str):
     return pwd_context.hash(password)
 
 
