@@ -1,12 +1,12 @@
 import os
-import urllib
+from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-load_dotenv
+load_dotenv()
 
 
 # 2. Pull values from environment variables
@@ -17,13 +17,12 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 # This handles the special symbols in your password perfectly
-params = urllib.parse.quote_plus(
+params = quote_plus(
     f"DRIVER={{{DB_DRIVER}}};"
     f"SERVER={DB_SERVER};"
     f"DATABASE={DB_NAME};"
     f"UID={DB_USER};"
     f"PWD={DB_PASSWORD};"
-    "TrustServerCertificate=yes;"
 )
 # DB Connection String
 SQLALCHEMY_DATABASE_URL = f"mssql+pyodbc:///?odbc_connect={params}"
