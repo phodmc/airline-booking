@@ -1,12 +1,33 @@
+import os
+import urllib
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# DB Connection String
-SQLALCHEMY_DATABASE_URL = (
-    "mssql+pyodbc:://sa:pho@dbsa25@TGL-IT-OFFICER\\SQLEXPRESS/AirlineDB"
-    "?driver=ODBC+Driver+18+SQL+Server"
+load_dotenv
+
+
+# 2. Pull values from environment variables
+DB_DRIVER = os.getenv("DB_DRIVER")
+DB_SERVER = os.getenv("DB_SERVER")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+
+# This handles the special symbols in your password perfectly
+params = urllib.parse.quote_plus(
+    f"DRIVER={{{DB_DRIVER}}};"
+    f"SERVER={DB_SERVER};"
+    f"DATABASE={DB_NAME};"
+    f"UID={DB_USER};"
+    f"PWD={DB_PASSWORD};"
+    "TrustServerCertificate=yes;"
 )
+# DB Connection String
+SQLALCHEMY_DATABASE_URL = f"mssql+pyodbc:///?odbc_connect={params}"
+
 
 # The engine manages the connection pool and connects to the database
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
