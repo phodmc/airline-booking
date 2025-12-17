@@ -89,7 +89,9 @@ class InventoryRead(InventoryBase):
 # --- 5. User Schemas ---
 class UserCreate(BaseModel):
     Email: str = Field(..., max_length=100)
-    Password: str = Field(..., min_length=8)  # The raw password before hashing
+    Password: str = Field(
+        ..., min_length=8, max_length=72
+    )  # The raw password before hashing
     FirstName: str = Field(..., max_length=50)
     LastName: str = Field(..., max_length=50)
     PhoneNumber: Optional[str] = Field(None, max_length=20)
