@@ -9,7 +9,7 @@ from .routers import flights
 app = FastAPI(title="Airline Booking System API", version="1.0")
 
 # All flight related endpoints
-# app.include_router(flights.router, prefix="/api/v1/flights", tags=["Flights"])
+app.include_router(flights.router, prefix="/api/v1/flights", tags=["Flights"])
 
 
 @app.get("/api/v1/health")
