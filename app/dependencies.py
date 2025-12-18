@@ -8,7 +8,7 @@ from . import models
 from .database import get_db
 
 # this tells fastapi where to look for the token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/token")
 
 # These should ideally go in your .env later!
 SECRET_KEY = "a-very-secret-string-12345"
