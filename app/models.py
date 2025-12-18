@@ -83,6 +83,7 @@ class Flight(Base):
     )
     aircraft = relationship("Aircraft", back_populates="flights")
     inventory_items = relationship("FlightInventory", back_populates="flight")
+    bookings = relationship("Booking", back_populates="flight")
 
 
 # --- 4. FlightInventory Model ---
@@ -128,6 +129,7 @@ class Booking(Base):
     BookingID = Column(Integer, primary_key=True, index=True)
     PNR = Column(CHAR(6), unique=True, nullable=False)
     UserID = Column(Integer, ForeignKey("Users.UserID"), nullable=False)
+    FlightID = Column(Integer, ForeignKey("Flights.FlightID"), nullable=False)
     BookingDate = Column(DateTime, nullable=False)
     TotalAmount = Column(DECIMAL(10, 2), nullable=False)
     PaymentStatus = Column(String(20), nullable=False)
@@ -136,6 +138,7 @@ class Booking(Base):
     # Relationships
     user = relationship("User", back_populates="bookings")
     passengers = relationship("Passenger", back_populates="booking")
+    flight = relationship("Flight", back_populates="bookings")
 
 
 # --- 7. Passengers Model ---

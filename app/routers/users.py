@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 # Import the SQLAlchemy Models, Pydantic Schemas, and DB utilities
 from .. import models, schemas
 from ..database import get_db
-from ..dependencies import get_current_user, oauth2_scheme
+from ..dependencies import get_current_user
 
 # These should ideally go in your .env later!
 SECRET_KEY = os.getenv("SECRET_KEY", "a-very-secret-string-12345")
@@ -107,7 +107,6 @@ def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # --- TEMPORARY SUCCESS RESPONSE ---
     # create and respond with access token
     access_token = create_access_token(data={"sub": user.Email})
     return {"access_token": access_token, "token_type": "bearer"}
@@ -117,28 +116,9 @@ def login_for_access_token(
 
 
 @router.get("/me", response_model=schemas.UserRead)
-def read_users_me(
-    # This dependency will eventually require a valid token
-    # For now, we manually look up the user using the temporary token structure
-    temp_token: str = Query(
-        ..., description="The temporary token returned from /token"
-    ),
-    db: Session = Depends(get_db),
-):
+def read_users_me(current_user: models.User = Depends(get_current_user)):
     """
     Retrieves the details of the currently logged-in user.
     """
-    try:
-        # Extract UserID from the temporary token
-        user_id = int(temp_token.split("-")[-1])
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token format"
-        )
 
-    user = db.query(models.User).filter(models.User.UserID == user_id).first()
-
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    return user
+    return current_user
