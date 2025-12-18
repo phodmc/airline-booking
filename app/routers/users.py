@@ -1,10 +1,11 @@
 # app/routers/users.py
-
-from datetime import datetime
+import os
+from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordRequestForm  # Used for login form
+from jose import JWTError, jwt
 
 # Security dependencies
 from passlib.context import CryptContext
@@ -29,6 +30,22 @@ def get_password_hash(password: str):
 def verify_password(plain_password, hashed_password):
     """Checks a plain password against a stored hash."""
     return pwd_context.verify(plain_password, hashed_password)
+
+
+# These should ideally go in your .env later!
+SECRET_KEY = os.getenv("SECRET_KEY", "a-very-secret-string-12345")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+
+    # this generates the long, encrypted string
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 
 # --- Endpoint 1: User Registration ---
