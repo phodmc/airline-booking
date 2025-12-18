@@ -1,11 +1,6 @@
 from fastapi import FastAPI
-from fastapi.security import OAuth2PasswordBearer
 
-from . import database, models
 from .routers import flights, users
-
-# This tells FastAPI where to look for the token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # creates all the tables in the database (Only run if you haven't run the SQL scripts)
 # database.Base.metadata.create_all(bind=database.engine)
