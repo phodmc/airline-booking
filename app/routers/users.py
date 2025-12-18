@@ -109,9 +109,9 @@ def login_for_access_token(
         )
 
     # --- TEMPORARY SUCCESS RESPONSE ---
-    # For a full system, you would generate and return a JWT here.
-    # For now, we return a simple success message.
-    return {"access_token": f"temp-token-{user.UserID}", "token_type": "bearer"}
+    # create and respond with access token
+    access_token = create_access_token(data={"sub": user.Email})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 # --- Endpoint 3: Get Current User (To verify login) ---
