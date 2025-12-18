@@ -1,4 +1,5 @@
 # models.py
+from datetime import datetime
 
 from sqlalchemy import (
     CHAR,
@@ -7,7 +8,6 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
-    Float,
     ForeignKey,
     Integer,
     String,
@@ -81,6 +81,7 @@ class Flight(Base):
     arrival_airport = relationship(
         "Airport", foreign_keys=[ArrivalAirportID], back_populates="arrivals"
     )
+
     aircraft = relationship("Aircraft", back_populates="flights")
     inventory_items = relationship("FlightInventory", back_populates="flight")
     bookings = relationship("Booking", back_populates="flight")
@@ -115,7 +116,7 @@ class User(Base):
     PhoneNumber = Column(String(20))
     DateOfBirth = Column(Date)
     CreatedDate = Column(
-        DateTime, nullable=False
+        DateTime, nullable=False, default=datetime.utcnow
     )  # DATETIME2 equivalent in SQLAlchemy is DateTime
 
     # Relationship to Bookings
