@@ -19,6 +19,14 @@ def seed_data():
         db.query(models.User).delete()
         db.query(models.Airport).delete()
 
+        # 1. Create a Test Aircraft (NEW)
+        # Assuming your Aircraft model has ModelName and Capacity
+        boeing = models.Aircraft(
+            ModelCode="B737", TotalSeats=160, Manufacturer="Boeing"
+        )
+        db.add(boeing)
+        db.commit()  # Commit to get the boeing.AircraftID
+
         # 2. Create Airports
         jfk = models.Airport(
             Name="John F. Kennedy International",
@@ -51,18 +59,20 @@ def seed_data():
             FlightNumber="AA101",
             DepartureAirportID=jfk.AirportID,
             ArrivalAirportID=lhr.AirportID,
-            DepartureTime=datetime.utcnow() + timedelta(days=1),
-            ArrivalTime=datetime.utcnow() + timedelta(days=1, hours=7),
-            Price=550.00,
+            AircraftID=boeing.AircraftID,  # Link to the aircraft
+            DepartureDateTime=datetime.utcnow() + timedelta(days=1),
+            ArrivalDateTime=datetime.utcnow() + timedelta(days=1, hours=7),
+            BasePrice=550.00,
         )
 
         flight2 = models.Flight(
             FlightNumber="EK202",
             DepartureAirportID=lhr.AirportID,
             ArrivalAirportID=dxb.AirportID,
-            DepartureTime=datetime.utcnow() + timedelta(days=2),
-            ArrivalTime=datetime.utcnow() + timedelta(days=2, hours=7),
-            Price=850.00,
+            AircraftID=boeing.AircraftID,  # Link to the aircraft
+            DepartureDateTime=datetime.utcnow() + timedelta(days=2),
+            ArrivalDateTime=datetime.utcnow() + timedelta(days=2, hours=7),
+            BasePrice=850.00,
         )
         db.add_all([flight1, flight2])
         db.commit()

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from . import database
 from .routers import flights, users
 
 # creates all the tables in the database (Only run if you haven't run the SQL scripts)
