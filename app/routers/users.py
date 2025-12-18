@@ -1,11 +1,10 @@
 # app/routers/users.py
 import os
 from datetime import datetime, timedelta
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordRequestForm  # Used for login form
-from jose import JWTError, jwt
+from jose import jwt
 
 # Security dependencies
 from passlib.context import CryptContext
@@ -14,6 +13,12 @@ from sqlalchemy.orm import Session
 # Import the SQLAlchemy Models, Pydantic Schemas, and DB utilities
 from .. import models, schemas
 from ..database import get_db
+from ..dependencies import get_current_user, oauth2_scheme
+
+# These should ideally go in your .env later!
+SECRET_KEY = os.getenv("SECRET_KEY", "a-very-secret-string-12345")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 router = APIRouter(tags=["Users and Authentication"])
 
@@ -30,12 +35,6 @@ def get_password_hash(password: str):
 def verify_password(plain_password, hashed_password):
     """Checks a plain password against a stored hash."""
     return pwd_context.verify(plain_password, hashed_password)
-
-
-# These should ideally go in your .env later!
-SECRET_KEY = os.getenv("SECRET_KEY", "a-very-secret-string-12345")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 def create_access_token(data: dict):
