@@ -11,6 +11,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    func,
 )
 from sqlalchemy.dialects.mssql import DATETIMEOFFSET
 from sqlalchemy.orm import relationship
@@ -116,7 +117,7 @@ class User(Base):
     PhoneNumber = Column(String(20))
     DateOfBirth = Column(Date)
     CreatedDate = Column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime, nullable=False, default=datetime.utcnow()
     )  # DATETIME2 equivalent in SQLAlchemy is DateTime
 
     # Relationship to Bookings
@@ -131,7 +132,7 @@ class Booking(Base):
     PNR = Column(CHAR(6), unique=True, nullable=False)
     UserID = Column(Integer, ForeignKey("Users.UserID"), nullable=False)
     FlightID = Column(Integer, ForeignKey("Flights.FlightID"), nullable=False)
-    BookingDate = Column(DateTime, nullable=False)
+    BookingDate = Column(DateTime, server_default=func.now())
     TotalAmount = Column(DECIMAL(10, 2), nullable=False)
     PaymentStatus = Column(String(20), nullable=False)
     BookingStatus = Column(String(20), nullable=False)
