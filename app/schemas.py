@@ -41,6 +41,28 @@ class AircraftRead(AircraftBase):
         from_attributes = True
 
 
+# --- 4. Inventory Schemas ---
+class InventoryBase(BaseModel):
+    ClassCode: str = Field(..., max_length=1)  # Y, J, F
+    BaseFare: Decimal = Field(..., ge=0)
+    TotalSeats: int = Field(..., gt=0)
+    IsRefundable: bool = True
+
+
+class InventoryRead(InventoryBase):
+    InventoryID: int
+    FlightID: int
+    SeatsBooked: int
+
+    # Property to show available seats
+    @computed_field
+    def SeatsAvailable(self) -> int:
+        return self.TotalSeats - self.SeatsBooked
+
+    class Config:
+        from_attributes = True
+
+
 # --- 3. Flight Schemas (for Searching and Creation) ---
 class FlightBase(BaseModel):
     FlightNumber: str = Field(..., max_length=10)
@@ -60,28 +82,7 @@ class FlightRead(FlightBase):
     departure_airport: AirportRead
     arrival_airport: AirportRead
     aircraft: AircraftRead
-
-    class Config:
-        from_attributes = True
-
-
-# --- 4. Inventory Schemas ---
-class InventoryBase(BaseModel):
-    ClassCode: str = Field(..., max_length=1)  # Y, J, F
-    BaseFare: Decimal = Field(..., ge=0)
-    TotalSeats: int = Field(..., gt=0)
-    IsRefundable: bool = True
-
-
-class InventoryRead(InventoryBase):
-    InventoryID: int
-    FlightID: int
-    SeatsBooked: int
-
-    # Property to show available seats
-    @computed_field
-    def SeatsAvailable(self) -> int:
-        return self.TotalSeats - self.SeatsBooked
+    inventory_items: List[InventoryRead]
 
     class Config:
         from_attributes = True
