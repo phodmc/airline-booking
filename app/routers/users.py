@@ -20,7 +20,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "a-very-secret-string-12345")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-router = APIRouter(tags=["Users and Authentication"])
+router = APIRouter()
 
 # Initialize Password Context for Hashing/Verification
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
