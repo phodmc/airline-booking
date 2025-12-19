@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -43,6 +44,7 @@ def create_booking(
             PNR=pnr,
             UserID=current_user.UserID,
             FlightID=inventory_item.FlightID,
+            BookingDate=datetime.utcnow(),
             TotalAmount=calculated_total,
             BookingStatus="Confirmed",
             PaymentStatus="Pending",
