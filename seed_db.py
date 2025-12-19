@@ -22,7 +22,7 @@ def seed_data():
         # 1. Create a Test Aircraft (NEW)
         # Assuming your Aircraft model has ModelName and Capacity
         boeing = models.Aircraft(
-            ModelCode="B737", TotalSeats=160, Manufacturer="Boeing"
+            ModelCode="A319", TotalSeats=160, Manufacturer="Airbus"
         )
         db.add(boeing)
         db.commit()  # Commit to get the boeing.AircraftID
@@ -76,6 +76,34 @@ def seed_data():
         )
         db.add_all([flight1, flight2])
         db.commit()
+
+        all_flights = db.query(models.Flight).all()
+
+        if not all_flights:
+            print("❌ No flights found! Seed some flights first.")
+        else:
+            for flight in all_flights:
+                # 2. Check if this flight already has inventory
+                existing = (
+                    db.query(models.FlightInventory)
+                    .filter(models.FlightInventory.FlightID == flight.FlightID)
+                    .first()
+                )
+
+                if not existing:
+                    # 3. Create a default Economy class for every flight
+                    economy = models.FlightInventory(
+                        FlightID=flight.FlightID,
+                        ClassCode="Y",
+                        BaseFare=250.00,
+                        TotalSeats=150,
+                        SeatsBooked=0,
+                        IsRefundable=True,
+                    )
+                    db.add(economy)
+                    print(f"✅ Added Economy for Flight {flight.FlightNumber}")
+
+            db.commit()
 
         print("✅ Database seeded successfully!")
         print(f"User: traveler@example.com | Password: password123")
