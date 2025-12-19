@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
+from pydantic.fields import computed_field
 
 
 # --- 1. Airport Schemas ---
@@ -20,7 +21,7 @@ class AirportRead(AirportBase):
     AirportID: int
 
     class Config:
-        orm_mode = (
+        from_attributes = (
             True  # Essential for Pydantic to read data directly from SQLAlchemy models
         )
 
@@ -37,7 +38,7 @@ class AircraftRead(AircraftBase):
     AircraftID: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # --- 3. Flight Schemas (for Searching and Creation) ---
@@ -61,7 +62,7 @@ class FlightRead(FlightBase):
     aircraft: AircraftRead
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # --- 4. Inventory Schemas ---
@@ -78,12 +79,12 @@ class InventoryRead(InventoryBase):
     SeatsBooked: int
 
     # Property to show available seats
-    @property
+    @computed_field
     def SeatsAvailable(self) -> int:
         return self.TotalSeats - self.SeatsBooked
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # --- 5. User Schemas ---
@@ -106,7 +107,7 @@ class UserRead(BaseModel):
     CreatedDate: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # --- 6. Booking and Passenger Schemas (Simplified) ---
@@ -123,8 +124,6 @@ class PassengerBase(BaseModel):
 class BookingCreate(BaseModel):
     # This is what the user sends to the API
     passengers: List[PassengerBase]
-    # Total price is usually calculated on the server side
-    TotalAmount: Decimal = Field(..., ge=0)
 
 
 class BookingRead(BaseModel):
@@ -139,7 +138,7 @@ class BookingRead(BaseModel):
     passengers: List["PassengerRead"]  # Forward reference needed for recursive schemas
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Define PassengerRead after BookingRead uses a forward reference
@@ -148,8 +147,8 @@ class PassengerRead(PassengerBase):
     BookingID: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Final configuration for recursive schemas (BookingRead uses PassengerRead)
-BookingRead.update_forward_refs()
+BookingRead.model_rebuild()
