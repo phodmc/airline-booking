@@ -30,6 +30,7 @@ def search_flights(
         joinedload(models.Flight.departure_airport),
         joinedload(models.Flight.arrival_airport),
         joinedload(models.Flight.aircraft),
+        joinedload(models.Flight.inventory_items),
     )
 
     # 3. Filter by Origin using the Alias
