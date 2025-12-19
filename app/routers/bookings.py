@@ -17,48 +17,61 @@ def create_booking(
 ):
     # Look up the fare from the Inventory table
     # We'll use the InventoryID from the first passenger to get the price
-    inventory_id = booking_in.passengers[0].InventoryID
-    inventory_item = (
-        db.query(models.FlightInventory)
-        .filter(models.FlightInventory.InventoryID == inventory_id)
-        .first()
-    )
-
-    if not inventory_item:
-        raise HTTPException(status_code=404, detail="FlightInventory/Class not found")
-
-    # Calculate Total (Price * Number of Passengers)
-    calculated_total = inventory_item.BaseFare * len(booking_in.passengers)
-
-    # 1. Generate a unique PNR
-    pnr = str(uuid.uuid4()).upper()[:6]
-
-    # 2. Create the main Booking record
-    # Note: We calculate TotalAmount based on your business logic later,
-    # for now we'll use the one from the request or fetch from Flight
-    new_booking = models.Booking(
-        PNR=pnr,
-        UserID=current_user.UserID,
-        TotalAmount=calculated_total,
-        BookingStatus="Confirmed",
-        PaymentStatus="Pending",
-    )
-
-    db.add(new_booking)
-    db.flush()  # This gets us the new_booking.BookingID without committing yet
-
-    # 3. Add the Passengers
-    for p_data in booking_in.passengers:
-        new_passenger = models.Passenger(
-            BookingID=new_booking.BookingID,
-            FirstName=p_data.FirstName,
-            LastName=p_data.LastName,
-            DateOfBirth=p_data.DateOfBirth,
-            PassportNumber=p_data.PassportNumber,
-            InventoryID=p_data.InventoryID,
+    try:
+        inventory_id = booking_in.passengers[0].InventoryID
+        inventory_item = (
+            db.query(models.FlightInventory)
+            .filter(models.FlightInventory.InventoryID == inventory_id)
+            .first()
         )
-        db.add(new_passenger)
 
-    db.commit()
-    db.refresh(new_booking)
-    return new_booking
+        if not inventory_item:
+            raise HTTPException(
+                status_code=404, detail="FlightInventory/Class not found"
+            )
+
+        # Calculate Total (Price * Number of Passengers)
+        calculated_total = inventory_item.BaseFare * len(booking_in.passengers)
+
+        # 1. Generate a unique PNR
+        pnr = str(uuid.uuid4()).upper()[:6]
+
+        # 2. Create the main Booking record
+        # Note: We calculate TotalAmount based on your business logic later,
+        # for now we'll use the one from the request or fetch from Flight
+        new_booking = models.Booking(
+            PNR=pnr,
+            UserID=current_user.UserID,
+            FlightID=inventory_item.FlightID,
+            TotalAmount=calculated_total,
+            BookingStatus="Confirmed",
+            PaymentStatus="Pending",
+        )
+
+        # update seats booked
+        inventory_item.SeatsBooked += len(booking_in.passengers)
+
+        db.add(new_booking)
+        db.flush()  # This gets us the new_booking.BookingID without committing yet
+
+        # 3. Add the Passengers
+        for p_data in booking_in.passengers:
+            new_passenger = models.Passenger(
+                BookingID=new_booking.BookingID,
+                FirstName=p_data.FirstName,
+                LastName=p_data.LastName,
+                DateOfBirth=p_data.DateOfBirth,
+                PassportNumber=p_data.PassportNumber,
+                InventoryID=p_data.InventoryID,
+            )
+            db.add(new_passenger)
+
+        db.commit()
+        db.refresh(new_booking)
+        return new_booking
+
+    except Exception as e:
+        db.rollback()  # If ANYTHING fails, undo all database changes!
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Booking failed: {str(e)}")
