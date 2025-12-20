@@ -19,6 +19,15 @@ def create_booking(
 ):
     # Look up the fare from the Inventory table
     # We'll use the InventoryID from the first passenger to get the price
+
+    # single flight validation: ensures all passengers are on the same flight
+    inventory_ids = {p.InventoryID for p in booking_in.passengers}
+    if len(inventory_ids) > 1:
+        raise HTTPException(
+            status_code=400,
+            detail="All passengers in a single booking must be on the same flight/class",
+        )
+
     try:
         inventory_id = booking_in.passengers[0].InventoryID
         inventory_item = (
@@ -87,10 +96,48 @@ def get_my_bookings(
     current_user: models.User = Depends(dependencies.get_current_user),
 ):
     # fetch all bookings for the logged-in user
-    bookings = db.query(models.Booking).options(
-        joinedload(models.Booking.flight).joinedload(models.Flight.departure_airport),
-        joinedload(models.Booking.flight).joinedload(models.Flight.arrival_airport),
-        joinedload(models.Booking.passengers),
+    bookings = (
+        db.query(models.Booking)
+        .options(
+            joinedload(models.Booking.flight).joinedload(
+                models.Flight.departure_airport
+            ),
+            joinedload(models.Booking.flight).joinedload(models.Flight.arrival_airport),
+            joinedload(models.Booking.passengers),
+        )
+        .filter(models.Booking.UserID == current_user.UserID)
+        .all()
     )
 
     return bookings
+
+
+@router.get("/{pnr}", response_model=schemas.BookingRead)
+def get_booking_by_pnr(
+    pnr: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(dependencies.get_current_user),
+):
+    # find bookings that belong to current user and matches pnr
+    booking = (
+        db.query(models.Booking)
+        .options(
+            joinedload(models.Booking.flight).joinedload(
+                models.Flight.departure_airport
+            ),
+            joinedload(models.Booking.flight).joinedload(models.Flight.arrival_airport),
+            joinedload(models.Booking.passengers),
+        )
+        .filter(
+            models.Booking.PNR == pnr.upper(),
+            models.Booking.UserID == current_user.UserID,
+        )
+        .first()
+    )
+
+    if not booking:
+        raise HTTPException(
+            status_code=404, detail=f"Booking with PNR {pnr} not found or access denied"
+        )
+
+    return booking
