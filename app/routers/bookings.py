@@ -92,3 +92,5 @@ def get_my_bookings(
         joinedload(models.Booking.flight).joinedload(models.Flight.arrival_airport),
         joinedload(models.Booking.passengers),
     )
+
+    return bookings
