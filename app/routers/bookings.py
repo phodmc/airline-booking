@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from .. import dependencies, models, schemas
 from ..database import get_db
@@ -77,3 +78,17 @@ def create_booking(
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Booking failed: {str(e)}")
+
+
+#
+@router.get("/me", response_model=List[schemas.BookingRead])
+def get_my_bookings(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(dependencies.get_current_user),
+):
+    # fetch all bookings for the logged-in user
+    bookings = db.query(models.Booking).options(
+        joinedload(models.Booking.flight).joinedload(models.Flight.departure_airport),
+        joinedload(models.Booking.flight).joinedload(models.Flight.arrival_airport),
+        joinedload(models.Booking.passengers),
+    )
