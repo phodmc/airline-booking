@@ -136,6 +136,7 @@ class BookingRead(BaseModel):
     PaymentStatus: str
     BookingStatus: str
 
+    flight: Optional[FlightRead]
     passengers: List["PassengerRead"]  # Forward reference needed for recursive schemas
 
     class Config:
