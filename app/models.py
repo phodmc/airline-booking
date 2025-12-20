@@ -156,7 +156,7 @@ class Passenger(Base):
     LastName = Column(String(50), nullable=False)
     DateOfBirth = Column(Date, nullable=False)
     PassportNumber = Column(String(30), unique=True)
-    SeatNumber = Column(String(5))
+    SeatNumber = Column(String(5), nullable=True)
 
     # Relationships
     booking = relationship("Booking", back_populates="passengers")
