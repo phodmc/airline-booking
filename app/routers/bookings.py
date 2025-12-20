@@ -75,6 +75,7 @@ def create_booking(
                 DateOfBirth=p_data.DateOfBirth,
                 PassportNumber=p_data.PassportNumber,
                 InventoryID=p_data.InventoryID,
+                SeatNumber=p_data.SeatNumber,
             )
             db.add(new_passenger)
 
