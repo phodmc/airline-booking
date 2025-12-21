@@ -106,6 +106,7 @@ class UserRead(BaseModel):
     FirstName: str
     LastName: str
     CreatedDate: datetime
+    IsAdmin: bool
 
     class Config:
         from_attributes = True
