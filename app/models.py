@@ -116,6 +116,7 @@ class User(Base):
     LastName = Column(String(50), nullable=False)
     PhoneNumber = Column(String(20))
     DateOfBirth = Column(Date)
+    IsAdmin = Column(Boolean, default=False, nullable=False)
     CreatedDate = Column(
         DateTime, nullable=False, default=datetime.utcnow()
     )  # DATETIME2 equivalent in SQLAlchemy is DateTime
