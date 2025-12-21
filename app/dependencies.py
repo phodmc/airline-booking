@@ -39,3 +39,10 @@ def get_current_user(
         raise credentials_exception
 
     return db_user
+
+
+def get_admin_user(current_user: models.User = Depends(get_current_user)):
+    if not current_user.IsAdmin:
+        raise HTTPException(status_code=403, detail="You do not have admin privileges")
+
+    return current_user
