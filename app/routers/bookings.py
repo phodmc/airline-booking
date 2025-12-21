@@ -42,6 +42,15 @@ def create_booking(
                 status_code=404, detail="FlightInventory/Class not found"
             )
 
+        # check for seats availability
+        num_passengers = len(booking_in.passengers)
+        available_seats = inventory_item.TotalSeats - inventory_item.SeatsBooked
+
+        if available_seats < num_passengers:
+            raise HTTPException(
+                status_code=400, detail=f"Only {available_seats} seats left!"
+            )
+
         # Calculate Total (Price * Number of Passengers)
         calculated_total = inventory_item.BaseFare * len(booking_in.passengers)
 
@@ -91,7 +100,8 @@ def create_booking(
         raise HTTPException(status_code=500, detail=f"Booking failed: {str(e)}")
 
 
-#
+# get all bookings for a user
+# __________________________
 @router.get("/me", response_model=List[schemas.BookingRead])
 def get_my_bookings(
     db: Session = Depends(get_db),
@@ -114,6 +124,8 @@ def get_my_bookings(
     return bookings
 
 
+# get single booking by PNR
+# ___________________________
 @router.get("/{pnr}", response_model=schemas.BookingRead)
 def get_booking_by_pnr(
     pnr: str,
