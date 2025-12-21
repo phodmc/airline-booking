@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -10,10 +13,11 @@ from .database import get_db
 # this tells fastapi where to look for the token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/token")
 
+load_dotenv()
 # These should ideally go in your .env later!
-SECRET_KEY = "a-very-secret-string-12345"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("TOKEN_EXPIRY")
 
 
 def get_current_user(
