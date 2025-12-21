@@ -49,6 +49,10 @@ class InventoryBase(BaseModel):
     IsRefundable: bool = True
 
 
+class InventoryCreate(InventoryBase):
+    pass
+
+
 class InventoryRead(InventoryBase):
     InventoryID: int
     FlightID: int
@@ -73,6 +77,10 @@ class FlightBase(BaseModel):
     ArrivalDateTime: datetime
     BasePrice: Decimal = Field(..., ge=0)
     Status: str = "Scheduled"
+
+
+class FlightCreate(FlightBase):
+    inventory_items: List[InventoryCreate]
 
 
 class FlightRead(FlightBase):
