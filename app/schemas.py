@@ -83,6 +83,17 @@ class FlightCreate(FlightBase):
     inventory_items: List[InventoryCreate]
 
 
+class FlightUpdate(BaseModel):
+    FlightNumber: Optional[str] = None
+    DepartureAirportID: Optional[int] = None
+    ArrivalAirportID: Optional[int] = None
+    AircraftID: Optional[int] = None
+    DepartureDateTime: Optional[datetime] = None
+    ArrivalDateTime: Optional[datetime] = None
+    BasePrice: Optional[Decimal] = None
+    Status: Optional[str] = None
+
+
 class FlightRead(FlightBase):
     FlightID: int
 
