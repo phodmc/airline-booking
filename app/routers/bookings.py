@@ -157,6 +157,38 @@ def get_booking_by_pnr(
     return booking
 
 
+# get booking by pnr and last name
+# _______________________________
+
+
+@router.get("/pnr/{pnr}/{last_name}", response_model=schemas.BookingRead)
+def get_trip_by_pnr_and_name(pnr: str, last_name: str, db: Session = Depends(get_db)):
+    # find bookings that belong to matches pnr and last name
+    booking = (
+        db.query(models.Booking)
+        .options(
+            joinedload(models.Booking.flight).joinedload(
+                models.Flight.departure_airport
+            ),
+            joinedload(models.Booking.flight).joinedload(models.Flight.arrival_airport),
+            joinedload(models.Booking.passengers),
+        )
+        .filter(
+            models.Booking.PNR == pnr.upper(),
+            models.Passenger.LastName.ilike(last_name),
+        )
+        .first()
+    )
+
+    if not booking:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Booking with PNR {pnr} not found or unknown last name",
+        )
+
+    return booking
+
+
 # flight/booking cancellation
 #  ____________________________
 
