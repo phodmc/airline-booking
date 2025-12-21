@@ -33,6 +33,7 @@ def create_booking(
         inventory_item = (
             db.query(models.FlightInventory)
             .filter(models.FlightInventory.InventoryID == inventory_id)
+            .with_for_update()
             .first()
         )
 
@@ -142,3 +143,61 @@ def get_booking_by_pnr(
         )
 
     return booking
+
+
+# flight/booking cancellation
+#  ____________________________
+
+
+@router.put("/{pnr}/cancel", response_model=schemas.BookingRead)
+def cancel_booking(
+    pnr: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(dependencies.get_current_user),
+):
+    try:
+        # fetch booking and ensure ownership of current user
+        booking = (
+            db.query(models.Booking)
+            .filter(
+                models.Booking.PNR == pnr.upper(),
+                models.Booking.UserID == current_user.UserID,
+            )
+            .first()
+        )
+
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found.")
+
+        # check if booking already cancelled
+        if booking.BookingStatus == "Cancelled":
+            raise HTTPException(status_code=400, detail="Booking is already cancelled")
+
+        # restore inventory by making seats available
+        num_passengers = len(
+            booking.passengers
+        )  # checks total passengers booked for this flight
+
+        if num_passengers > 0:
+            inventory_id = booking.passengers[0].InventoryID
+            inventory_item = (
+                db.query(models.FlightInventory)
+                .filter(models.FlightInventory.InventoryID == inventory_id)
+                .with_for_update()
+                .first()
+            )
+
+            if inventory_item:
+                inventory_item.SeatsBooked -= num_passengers
+
+        booking.BookingStatus = "Cancelled"
+
+        db.commit()
+        db.refresh(booking)
+        return booking
+
+    except Exception as e:
+        db.rollback()
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Cancellation failed: {str(e)}")
