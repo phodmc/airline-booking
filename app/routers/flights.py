@@ -118,3 +118,35 @@ def create_flight(
         raise HTTPException(
             status_code=500, detail=f"Failed to create flight: {str(e)}"
         )
+
+
+# update flights route
+
+
+@router.put("/{flight_id}", response_model=schemas.FlightRead)
+def update_flight(
+    flight_id: int,
+    flight_in: schemas.FlightUpdate,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_admin_user),
+):
+    flight = db.query(models.Flight).filter(models.Flight.FlightID == flight_id).first()
+
+    if flight is None:
+        raise HTTPException(status_code=404, detail="Flight not found")
+
+    update_data = flight_in.dict(exclude_unset=True)  # converts schema to dictionary
+
+    try:
+        for key, item in update_data.items():
+            setattr(flight, key, item)
+
+        db.commit()
+        db.refresh(flight)
+        return flight
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400, detail=f"Update failed. Check your data. Error: {str(e)}"
+        )
