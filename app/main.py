@@ -25,8 +25,8 @@ app.include_router(
     users.router, prefix="/api/v1/users", tags=["Users and Authentication"]
 )
 app.include_router(bookings.router, prefix="/api/v1/bookings", tags=["Bookings"])
-app.include_router(aircrafts.router, prefix="api/v1/aircrafts", tags="Aircrafts")
-app.include_router(airports.router, prefix="api/v1/aircrafts", tags="Airports")
+app.include_router(aircrafts.router, prefix="/api/v1/aircrafts", tags=["Aircrafts"])
+app.include_router(airports.router, prefix="/api/v1/airports", tags=["Airports"])
 
 
 @app.get("/api/v1/health")
