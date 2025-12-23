@@ -87,6 +87,22 @@ def create_flight(
             status_code=400, detail="Origin and Destination cannot be the same airport."
         )
 
+    # check for existing flight number and departure time
+    existing_flight = (
+        db.query(models.Flight)
+        .filter(
+            models.Flight.FlightNumber == flight_in.FlightNumber,
+            models.Flight.DepartureDateTime == flight_in.DepartureDateTime,
+        )
+        .first()
+    )
+
+    if existing_flight:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Flight {flight_in.FlightNumber} is already scheduled for this time.",
+        )
+
     aircraft = (
         db.query(models.Aircraft)
         .filter(models.Aircraft.AircraftID == flight_in.AircraftID)
@@ -97,7 +113,7 @@ def create_flight(
         raise HTTPException(status_code=404, detail="Aircraft not found")
 
     actual_inventory_total = sum(item.TotalSeats for item in flight_in.inventory_items)
-    if actual_inventory_total > aircraft.totalSeats:
+    if actual_inventory_total > aircraft.TotalSeats:
         raise HTTPException(
             status_code=400,
             detail=f"Over capacity! Plane holds {aircraft.totalSeats}, but you requested {actual_inventory_total}.",
