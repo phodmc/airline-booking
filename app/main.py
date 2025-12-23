@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import bookings, flights, users
+from .routers import aircrafts, airports, bookings, flights, users
 
 # creates all the tables in the database (Only run if you haven't run the SQL scripts)
 # database.Base.metadata.create_all(bind=database.engine)
@@ -25,6 +25,8 @@ app.include_router(
     users.router, prefix="/api/v1/users", tags=["Users and Authentication"]
 )
 app.include_router(bookings.router, prefix="/api/v1/bookings", tags=["Bookings"])
+app.include_router(aircrafts.router, prefix="api/v1/aircrafts", tags="Aircrafts")
+app.include_router(airports.router, prefix="api/v1/aircrafts", tags="Airports")
 
 
 @app.get("/api/v1/health")
