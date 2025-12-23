@@ -16,7 +16,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/token")
 load_dotenv()
 # These should ideally go in your .env later!
 SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("HS256")
+ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("TOKEN_EXPIRY")
 
 
