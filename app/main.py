@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .routers import bookings, flights, users
 
@@ -6,6 +7,17 @@ from .routers import bookings, flights, users
 # database.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Airline Booking System API", version="1.0")
+
+# CORS Middleware
+
+origins = ["http://localhost:5173"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # All flight related endpoints
 app.include_router(flights.router, prefix="/api/v1/flights", tags=["Flights"])
