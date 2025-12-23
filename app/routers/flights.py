@@ -82,6 +82,11 @@ def create_flight(
     db: Session = Depends(get_db),
     admin_user: models.User = Depends(get_admin_user),
 ):
+    if flight_in.DepartureAirportID == flight_in.ArrivalAirportID:
+        raise HTTPException(
+            status_code=400, detail="Origin and Destination cannot be the same airport."
+        )
+
     aircraft = (
         db.query(models.Aircraft)
         .filter(models.Aircraft.AircraftID == flight_in.AircraftID)
