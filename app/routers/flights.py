@@ -82,6 +82,22 @@ def create_flight(
     db: Session = Depends(get_db),
     admin_user: models.User = Depends(get_admin_user),
 ):
+    aircraft = (
+        db.query(models.Aircraft)
+        .filter(models.Aircraft.AircraftID == flight_in.AircraftID)
+        .first()
+    )
+
+    if not aircraft:
+        raise HTTPException(status_code=404, detail="Aircraft not found")
+
+    actual_inventory_total = sum(item.TotalSeats for item in flight_in.inventory_items)
+    if actual_inventory_total > aircraft.totalSeats:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Over capacity! Plane holds {aircraft.totalSeats}, but you requested {actual_inventory_total}.",
+        )
+
     try:
         new_flight = models.Flight(
             FlightNumber=flight_in.FlightNumber,
