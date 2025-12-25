@@ -14,7 +14,5 @@ router = APIRouter()
 
 # --- Endpoint 1: Search Flights ---
 @router.get("", response_model=List[schemas.AirportRead])
-def get_airports(
-    db: Session = Depends(get_db), admin_user: models.User = Depends(get_admin_user)
-):
+def get_airports(db: Session = Depends(get_db)):
     return db.query(models.Airport).all()
