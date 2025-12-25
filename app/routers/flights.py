@@ -158,8 +158,6 @@ def create_flight(
 
 
 # update flights route
-
-
 @router.put("/{flight_id}", response_model=schemas.FlightRead)
 def update_flight(
     flight_id: int,
