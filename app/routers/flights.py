@@ -116,7 +116,7 @@ def create_flight(
     if actual_inventory_total > aircraft.TotalSeats:
         raise HTTPException(
             status_code=400,
-            detail=f"Over capacity! Plane holds {aircraft.totalSeats}, but you requested {actual_inventory_total}.",
+            detail=f"Over capacity! Plane holds {aircraft.TotalSeats}, but you requested {actual_inventory_total}.",
         )
 
     try:
