@@ -11,6 +11,13 @@ from ..database import get_db
 router = APIRouter()
 
 
+# seat number generator
+def gen_seat_label(index):
+    row = (index // 6) + 1
+    letter = ["A", "B", "C", "D", "E", "F"][index % 6]
+    return f"{row}{letter}"
+
+
 @router.post("", response_model=schemas.BookingRead)
 def create_booking(
     booking_in: schemas.BookingCreate,
@@ -60,15 +67,20 @@ def create_booking(
         # 2. Create the main Booking record
         # Note: We calculate TotalAmount based on your business logic later,
         # for now we'll use the one from the request or fetch from Flight
-        new_booking = models.Booking(
-            PNR=pnr,
-            UserID=current_user.UserID,
-            FlightID=inventory_item.FlightID,
-            BookingDate=datetime.utcnow(),
-            TotalAmount=calculated_total,
-            BookingStatus="Confirmed",
-            PaymentStatus="Pending",
-        )
+        for i, p_data in enumerate(booking_in.passengers):
+            seat_index = inventory_item.SeatsBooked + i
+            assigned_seat = gen_seat_label(seat_index)
+
+            new_booking = models.Booking(
+                PNR=pnr,
+                UserID=current_user.UserID,
+                FlightID=inventory_item.FlightID,
+                BookingDate=datetime.utcnow(),
+                TotalAmount=calculated_total,
+                BookingStatus="Confirmed",
+                PaymentStatus="Pending",
+                SeatNumber=assigned_seat,
+            )
 
         # update seats booked
         inventory_item.SeatsBooked += len(booking_in.passengers)
