@@ -199,10 +199,11 @@ def get_trip_by_pnr_and_name(pnr: str, last_name: str, db: Session = Depends(get
     return booking
 
 
+#
+
+
 # flight/booking cancellation
 #  ____________________________
-
-
 @router.put("/{pnr}/cancel", response_model=schemas.BookingRead)
 def cancel_booking(
     pnr: str,
