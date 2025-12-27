@@ -142,6 +142,13 @@ class PassengerBase(BaseModel):
     InventoryID: int
 
 
+class PassengerUpdate(BaseModel):
+    FirstName: str = Field(..., max_length=50)
+    LastName: str = Field(..., max_length=50)
+    DateOfBirth: date
+    PassportNumber: Optional[str] = Field(None, max_length=30)
+
+
 class BookingCreate(BaseModel):
     # This is what the user sends to the API
     passengers: List[PassengerBase]
