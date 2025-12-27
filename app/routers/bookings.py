@@ -67,29 +67,24 @@ def create_booking(
         # 2. Create the main Booking record
         # Note: We calculate TotalAmount based on your business logic later,
         # for now we'll use the one from the request or fetch from Flight
-        for i, p_data in enumerate(booking_in.passengers):
-            seat_index = inventory_item.SeatsBooked + i
-            assigned_seat = gen_seat_label(seat_index)
 
-            new_booking = models.Booking(
-                PNR=pnr,
-                UserID=current_user.UserID,
-                FlightID=inventory_item.FlightID,
-                BookingDate=datetime.utcnow(),
-                TotalAmount=calculated_total,
-                BookingStatus="Confirmed",
-                PaymentStatus="Pending",
-                SeatNumber=assigned_seat,
-            )
-
-        # update seats booked
-        inventory_item.SeatsBooked += len(booking_in.passengers)
+        new_booking = models.Booking(
+            PNR=pnr,
+            UserID=current_user.UserID,
+            FlightID=inventory_item.FlightID,
+            BookingDate=datetime.utcnow(),
+            TotalAmount=calculated_total,
+            BookingStatus="Confirmed",
+            PaymentStatus="Pending",
+        )
 
         db.add(new_booking)
         db.flush()  # This gets us the new_booking.BookingID without committing yet
 
         # 3. Add the Passengers
-        for p_data in booking_in.passengers:
+        for i, p_data in enumerate(booking_in.passengers):
+            seat_index = inventory_item.SeatsBooked + i
+            assigned_seat = gen_seat_label(seat_index)
             new_passenger = models.Passenger(
                 BookingID=new_booking.BookingID,
                 FirstName=p_data.FirstName,
@@ -97,9 +92,12 @@ def create_booking(
                 DateOfBirth=p_data.DateOfBirth,
                 PassportNumber=p_data.PassportNumber,
                 InventoryID=p_data.InventoryID,
-                SeatNumber=p_data.SeatNumber,
+                SeatNumber=assigned_seat,
             )
             db.add(new_passenger)
+
+        # update seats booked
+        inventory_item.SeatsBooked += len(booking_in.passengers)
 
         db.commit()
         db.refresh(new_booking)
