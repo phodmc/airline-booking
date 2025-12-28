@@ -30,7 +30,9 @@ def create_booking(
         passenger_count = len(booking_in.passengers)
 
         # Quick lookup to get the FlightID needed for the procedure
-        inventory_item = db.query(models.FlightInventory).filter_by(InventoryID=inventory_id).first()
+        inventory_item = (
+            db.query(models.FlightInventory).filter_by(InventoryID=inventory_id).first()
+        )
         if not inventory_item:
             raise HTTPException(status_code=404, detail="Inventory not found")
 
@@ -50,7 +52,7 @@ def create_booking(
         ).fetchone()
 
         new_booking_id = booking_result["NewBookingID"]
-        assigned_pnr = booking_result.["AssignedPNR"]
+        assigned_pnr = booking_result["AssignedPNR"]
 
         # 2. EXECUTE PROCEDURE #3: sp_CreatePassenger
         # This loop runs the passenger procedure for each person
@@ -78,7 +80,9 @@ def create_booking(
         # We fetch it back so FastAPI can return the full object to the frontend
         final_booking = (
             db.query(models.Booking)
-            .options(joinedload(models.Booking.passengers), joinedload(models.Booking.flight))
+            .options(
+                joinedload(models.Booking.passengers), joinedload(models.Booking.flight)
+            )
             .filter(models.Booking.BookingID == new_booking_id)
             .first()
         )
