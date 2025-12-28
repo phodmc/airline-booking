@@ -27,39 +27,43 @@ def create_booking(
 ):
     try:
         inventory_id = booking_in.passengers[0].InventoryID
+        passenger_count = len(booking_in.passengers)
 
-        # 1. Use SQL Functions to generate PNR and Total Amount
-        pnr = db.execute(text("SELECT dbo.fn_GeneratePNR()")).scalar()
-        total_amount = db.execute(
-            text("SELECT dbo.fn_CalculateTotalAmount(:iid, :count)"),
-            {"iid": inventory_id, "count": len(booking_in.passengers)},
-        ).scalar()
+        # Quick lookup to get the FlightID needed for the procedure
+        inventory_item = db.query(models.FlightInventory).filter_by(InventoryID=inventory_id).first()
+        if not inventory_item:
+            raise HTTPException(status_code=404, detail="Inventory not found")
 
-        # 2. Create the main Booking record
-        # Note: We calculate TotalAmount based on your business logic later,
-        # for now we'll use the one from the request or fetch from Flight
+        # 1. EXECUTE PROCEDURE #5: sp_CreateBooking
+        # This procedure uses fn_GeneratePNR and fn_CalculateTotalAmount internally
+        # and returns the NewBookingID and the PNR.
+        booking_result = db.execute(
+            text(
+                "EXEC sp_CreateBooking @UserID=:uid, @FlightID=:fid, @InventoryID=:iid, @PassengerCount=:pc"
+            ),
+            {
+                "uid": current_user.UserID,
+                "fid": inventory_item.FlightID,
+                "iid": inventory_id,
+                "pc": passenger_count,
+            },
+        ).fetchone()
 
-        new_booking = models.Booking(
-            PNR=pnr,
-            UserID=current_user.UserID,
-            FlightID=inventory_item.FlightID,
-            BookingDate=datetime.utcnow(),
-            TotalAmount=calculated_total,
-            BookingStatus="Confirmed",
-            PaymentStatus="Pending",
-        )
-        db.add(new_booking)
-        db.flush()  # This gets us the new_booking.BookingID without committing yet
+        new_booking_id = booking_result["NewBookingID"]
+        assigned_pnr = booking_result.["AssignedPNR"]
 
-        # 3. Add Passengers via Stored Procedure
-        # This auto-generates seats via fn_GenerateSeatLabel!
+        # 2. EXECUTE PROCEDURE #3: sp_CreatePassenger
+        # This loop runs the passenger procedure for each person
+        # It uses fn_GenerateSeatLabel internally.
         for p_data in booking_in.passengers:
             db.execute(
-                text(
-                    "EXEC sp_CreatePassenger @BookingID=:bid, @InventoryID=:iid, @FirstName=:fn, @LastName=:ln, @DateOfBirth=:dob, @PassportNumber=:pn"
-                ),
+                text("""
+                    EXEC sp_CreatePassenger
+                    @BookingID=:bid, @InventoryID=:iid, @FirstName=:fn,
+                    @LastName=:ln, @DateOfBirth=:dob, @PassportNumber=:pn
+                """),
                 {
-                    "bid": new_booking.BookingID,
+                    "bid": new_booking_id,
                     "iid": p_data.InventoryID,
                     "fn": p_data.FirstName,
                     "ln": p_data.LastName,
@@ -69,8 +73,16 @@ def create_booking(
             )
 
         db.commit()
-        db.refresh(new_booking)
-        return new_booking
+
+        # 3. Fetch the final record using our View (Optional but cool) or standard Query
+        # We fetch it back so FastAPI can return the full object to the frontend
+        final_booking = (
+            db.query(models.Booking)
+            .options(joinedload(models.Booking.passengers), joinedload(models.Booking.flight))
+            .filter(models.Booking.BookingID == new_booking_id)
+            .first()
+        )
+        return final_booking
 
     except Exception as e:
         db.rollback()  # If ANYTHING fails, undo all database changes!
