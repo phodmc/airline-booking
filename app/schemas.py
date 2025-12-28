@@ -170,6 +170,26 @@ class BookingRead(BaseModel):
         from_attributes = True
 
 
+class BookingSummary(BaseModel):
+    BookingID: int
+    PNR: str
+    BookingStatus: str
+    PaymentStatus: str | None = None  # Added & made safe
+    BookingDate: datetime  # Added
+    TotalAmount: Decimal
+    FlightNumber: str
+    DepartureCode: str
+    DepartureCity: str
+    ArrivalCode: str
+    ArrivalCity: str
+    DepartureDateTime: datetime
+    ArrivalDateTime: datetime  # Added
+    PassengerCount: int
+
+    class Config:
+        from_attributes = True
+
+
 # Define PassengerRead after BookingRead uses a forward reference
 class PassengerRead(PassengerBase):
     PassengerID: int
