@@ -41,7 +41,10 @@ def create_booking(
         # and returns the NewBookingID and the PNR.
         booking_result = db.execute(
             text(
-                "EXEC sp_CreateBooking @UserID=:uid, @FlightID=:fid, @InventoryID=:iid, @PassengerCount=:pc"
+                """
+                SET NOCOUNT ON;
+                EXEC sp_CreateBooking @UserID=:uid, @FlightID=:fid, @InventoryID=:iid, @PassengerCount=:pc
+                """
             ),
             {
                 "uid": current_user.UserID,
@@ -51,8 +54,14 @@ def create_booking(
             },
         ).fetchone()
 
-        new_booking_id = booking_result["NewBookingID"]
-        assigned_pnr = booking_result["AssignedPNR"]
+        # Ensure we actually got a result back
+        if not booking_result:
+            raise HTTPException(
+                status_code=500, detail="Procedure failed to return Booking ID"
+            )
+
+        new_booking_id = booking_result.NewBookingID
+        assigned_pnr = booking_result.AssignedPNR
 
         # 2. EXECUTE PROCEDURE #3: sp_CreatePassenger
         # This loop runs the passenger procedure for each person
@@ -97,17 +106,15 @@ def create_booking(
 
 # get all bookings for a user
 # __________________________
-@router.get("/me", response_model=List[schemas.BookingRead])
+@router.get("/me", response_model=List[schemas.BookingSummary])
 def get_my_bookings(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(dependencies.get_current_user),
 ):
-    # fetch all bookings for the logged-in user
-    # Query the VIEW we created
-    # This automatically includes FlightNumber, Times, and PassengerCount
     query = text("SELECT * FROM vw_MyBookings WHERE UserID = :uid")
     result = db.execute(query, {"uid": current_user.UserID})
 
+    # This automatically maps SQL columns to the BookingSummary fields
     return result.mappings().all()
 
 
