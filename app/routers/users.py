@@ -72,7 +72,10 @@ def register_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
         # Use the Stored Procedure for the actual insert
         db.execute(
             text(
-                "EXEC sp_CreateUser @Email=:email, @HashedPassword=:hp, @FirstName=:fn, @LastName=:ln, @PhoneNumber=:ph, @DateOfBirth=:dob"
+                """
+                SET NOCOUNT ON;
+                EXEC sp_CreateUser @Email=:email, @HashedPassword=:hp, @FirstName=:fn, @LastName=:ln, @PhoneNumber=:ph, @DateOfBirth=:dob
+                """
             ),
             {
                 "email": user_data.Email,
