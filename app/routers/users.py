@@ -8,6 +8,7 @@ from jose import jwt
 
 # Security dependencies
 from passlib.context import CryptContext
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 # Import the SQLAlchemy Models, Pydantic Schemas, and DB utilities
@@ -67,23 +68,31 @@ def register_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
     # Hash the password for secure storage
     hashed_password = get_password_hash(user_data.Password)
 
-    # Create the new user object
-    new_user = models.User(
-        Email=user_data.Email,
-        HashedPassword=hashed_password,
-        FirstName=user_data.FirstName,
-        LastName=user_data.LastName,
-        PhoneNumber=user_data.PhoneNumber,
-        DateOfBirth=user_data.DateOfBirth,
-        CreatedDate=datetime.now(),
-    )
+    try:
+        # Use the Stored Procedure for the actual insert
+        db.execute(
+            text(
+                "EXEC sp_CreateUser @Email=:email, @HashedPassword=:hp, @FirstName=:fn, @LastName=:ln, @PhoneNumber=:ph, @DateOfBirth=:dob"
+            ),
+            {
+                "email": user_data.Email,
+                "hp": hashed_password,
+                "fn": user_data.FirstName,
+                "ln": user_data.LastName,
+                "ph": user_data.PhoneNumber,
+                "dob": user_data.DateOfBirth,
+            },
+        )
+        db.commit()
 
-    # Commit to the database
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+        # Fetch the newly created user to return
+        return (
+            db.query(models.User).filter(models.User.Email == user_data.Email).first()
+        )
 
-    return new_user
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Registration failed.")
 
 
 # --- Endpoint 2: User Login (Get Token) ---
